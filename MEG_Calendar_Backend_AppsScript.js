@@ -55,14 +55,32 @@ function doPost(e) {
 
     // ── ACTION: Fetch a Google Doc as plain text ──────────────────────────────
     if (action === 'fetchDoc') {
-      const docId = payload.docId;
+      const docId   = payload.docId;
+      const docType = payload.docType || 'doc';
       if (!docId) {
         output.setContent(JSON.stringify({ error: 'No document ID provided.' }));
         return output;
       }
       try {
-        const doc  = DocumentApp.openById(docId);
-        const text = doc.getBody().getText();
+        let text = '';
+        if (docType === 'sheet') {
+          // Handle Google Sheets — read all cell values as text
+          const ss     = SpreadsheetApp.openById(docId);
+          const sheets = ss.getSheets();
+          const lines  = [];
+          sheets.forEach(function(sheet) {
+            const data = sheet.getDataRange().getValues();
+            data.forEach(function(row) {
+              const clean = row.filter(function(c){ return c !== null && c !== ''; });
+              if (clean.length > 0) lines.push(clean.join(' | '));
+            });
+          });
+          text = lines.join('\n');
+        } else {
+          // Handle Google Docs
+          const doc = DocumentApp.openById(docId);
+          text = doc.getBody().getText();
+        }
         if (!text || text.trim().length < 10) {
           output.setContent(JSON.stringify({ error: 'Document appears empty or could not be read.' }));
         } else {
@@ -70,7 +88,7 @@ function doPost(e) {
         }
       } catch(docErr) {
         output.setContent(JSON.stringify({ 
-          error: 'Could not open document. Make sure it is shared with the Google account this script runs as, or set to "Anyone with the link can view".' 
+          error: 'Could not open file. Make sure sharing is set to "Anyone with the link can view". Error: ' + docErr.message
         }));
       }
       return output;
@@ -125,7 +143,7 @@ function callClaude(apiKey, systemPrompt, userMessage) {
 
   const requestBody = {
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 4000,
+    max_tokens: 8000,
     system: systemPrompt,
     messages: [
       { role: 'user', content: userMessage }
