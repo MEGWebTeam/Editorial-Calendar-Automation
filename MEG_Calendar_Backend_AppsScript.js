@@ -2,7 +2,7 @@
  * MEG Editorial Calendar Generator — Google Apps Script Backend
  * ─────────────────────────────────────────────────────────────
  * SETUP INSTRUCTIONS (do this once, then never touch it again):
- *
+ * ***
  * STEP 1 — Add your Claude API key:
  *   In this editor, click Extensions → Apps Script (if not already here)
  *   Click the gear icon ⚙ (Project Settings) in the left sidebar
@@ -42,7 +42,9 @@ function doOptions(e) {
     .setMimeType(ContentService.MimeType.TEXT);
 }
 
-// ── MAIN HANDLER ─────────────────────────────────────────────────────────────
+
+
+// ── MAIN HANDLER ───
 
 function doPost(e) {
   const output = ContentService.createTextOutput();
